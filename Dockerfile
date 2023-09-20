@@ -1,7 +1,7 @@
 FROM alpine:3.18.3
 
-COPY script.sh /script.sh
+EXPOSE 8000
 
-RUN chmod +x /script.sh
+RUN apk add --no-cache python3
 
-ENTRYPOINT ["/script.sh"]
+ENTRYPOINT ["python3", "-m", "http.server", "8000"]
