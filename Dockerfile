@@ -6,7 +6,7 @@ RUN apk add --no-cache python3
 
 RUN mkdir /app
 
-RUN echo "Hello World" > /app/index.html
+RUN DATE=$(date) && echo "Hello World $DATE" > /app/index.html
 
 WORKDIR /app
 
