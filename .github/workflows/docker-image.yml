@@ -7,6 +7,7 @@ on:
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}
+    BUILDX_NO_DEFAULT_ATTESTATIONS: 1
 
 jobs:
     build:
@@ -42,6 +43,7 @@ jobs:
               with:
                 context: .
                 push: true
+                outputs: type=docker
                 tags: ${{ steps.meta.outputs.tags }}
                 labels: ${{ steps.meta.outputs.labels }}
                 cache-from: type=gha
