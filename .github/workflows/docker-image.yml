@@ -7,8 +7,7 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}
-    BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+    IMAGE_NAME: ${{ github.repository }} 
 
 jobs:
     build:
@@ -32,11 +31,21 @@ jobs:
                 username: ${{ github.actor }}
                 password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Extract Docker metadata
-              id: meta
-              uses: docker/metadata-action@v5.0.0
-              with:
-                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            - name: Calculate Docker tags
+              id: calc_tags
+              run: |
+                DOCKER_TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+                if [[ "${{ github.event_name }}" == "push" && "${{ startsWith(github.ref, 'refs/tags/v') }}" == "true" ]]; then
+                  DOCKER_TAGS="${DOCKER_TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
+                fi
+                echo "DOCKER_TAGS=${DOCKER_TAGS}"
+                echo "DOCKER_TAGS=${DOCKER_TAGS}" >> $GITHUB_ENV
+                echo "::set-output name=DOCKER_TAGS::${DOCKER_TAGS}"
+              env:
+                REGISTRY: ${{ env.REGISTRY }}
+                IMAGE_NAME: ${{ env.IMAGE_NAME }}
+              shell: bash
+              
 
             - name: Build and push Docker image
               id: build-and-push
@@ -44,7 +53,8 @@ jobs:
               with:
                 context: .
                 push: true
-                tags: ${{ steps.meta.outputs.tags }}
-                labels: ${{ steps.meta.outputs.labels }}
+                provenance: false
+                tags: ${{ steps.calc_tags.outputs.DOCKER_TAGS }}
                 cache-from: type=gha
                 cache-to: type=gha,mode=max
+            
